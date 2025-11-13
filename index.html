@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cobrinha Geográfica - 7º Ano</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            padding: 10px;
+        }
+        #game-container {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #score {
+            color: white;
+            font-size: 26px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        #game-board {
+            border: 3px solid #ecf0f1;
+            background-color: rgba(10, 20, 30, 0.8);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            max-width: 100%;
+            height: auto;
+        }
+        #feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 10px black;
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Tela de pergunta */
+        #question-screen, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.95);
+            color: white;
+            z-index: 20;
+        }
+        #game-over-screen {
+            display: none;
+        }
+        #question-text {
+            font-size: 20px;
+            max-width: 80%;
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        #timer-display {
+            font-size: 32px;
+            color: #f1c40f;
+            margin-bottom: 20px;
+        }
+        .options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .option {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .option-label {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            text-shadow: 0 0 5px black;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        #final-score {
+            font-size: 32px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+
+        /* CONTROLES MOBILE AJUSTADOS - Menor altura e largura */
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            width: 120px;
+            height: 120px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            padding: 0;
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1.5px solid white;
+            border-radius: 6px;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            min-width: 38px;
+            min-height: 38px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: all 0.1s ease;
+        }
+
+        #up-btn {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        #left-btn {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        #right-btn {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        #down-btn {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .control-btn:active {
+            background: rgba(255,255,255,0.35);
+            transform: scale(0.92);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+
+        /* Para celulares muito pequenos (ex: iPhone SE) */
+        @media (max-height: 600px), (max-width: 330px) {
+            body {
+                padding: 5px;
+            }
+            #score {
+                font-size: 24px;
+                margin-bottom: 5px;
+            }
+            #game-board {
+                width: 400px;
+                height: 400px;
+            }
+            #controls {
+                width: 110px;
+                height: 110px;
+                margin-top: 8px;
+                margin-bottom: 10px;
+            }
+            .control-btn {
+                min-width: 36px;
+                min-height: 36px;
+                font-size: 16px;
+            }
+        }
+
+        /* Evita zoom acidental */
+        input, button, select, textarea {
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="score">Pontuação: 0</div>
+        <canvas id="game-board" width="500" height="500"></canvas>
+        <div id="feedback">Acertou!</div>
+
+        <div id="question-screen">
+            <div id="question-text">Carregando pergunta...</div>
+            <div id="timer-display">10s</div>
+            <div class="options">
+                <div class="option" style="background-color: blue;" data-value="0"><span class="option-label">A</span></div>
+                <div class="option" style="background-color: red;" data-value="1"><span class="option-label">B</span></div>
+                <div class="option" style="background-color: green;" data-value="2"><span class="option-label">C</span></div>
+                <div class="option" style="background-color: yellow;" data-value="3"><span class="option-label">D</span></div>
+                <div class="option" style="background-color: purple;" data-value="4"><span class="option-label">E</span></div>
+            </div>
+        </div>
+
+        <div id="game-over-screen">
+            <h2 style="color: #e74c3c;">⚠️ Game Over!</h2>
+            <div id="final-score">Pontuação: 0</div>
+            <button id="restart-btn">Jogar Novamente</button>
+        </div>
+
+        <!-- Controles Mobile - Compactos -->
+        <div id="controls">
+            <div class="control-btn" id="up-btn">↑</div>
+            <div class="control-btn" id="left-btn">←</div>
+            <div class="control-btn" id="right-btn">→</div>
+            <div class="control-btn" id="down-btn">↓</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game-board');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const feedbackEl = document.getElementById('feedback');
+        const questionScreen = document.getElementById('question-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreEl = document.getElementById('final-score');
+        const questionText = document.getElementById('question-text');
+        const timerDisplay = document.getElementById('timer-display');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Ajusta o tamanho do canvas para caber em telas menores
+        function resizeCanvas() {
+            const maxWidth = Math.min(500, window.innerWidth - 20);
+            const size = Math.floor(maxWidth / 20) * 20; // múltiplo de gridSize
+            canvas.width = size;
+            canvas.height = size;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const gridSize = 20;
+        let tileCount = canvas.width / gridSize;
+
+        let snake = [];
+        let foods = [];
+        let dx = 0;
+        let dy = 0;
+        let score = 0;
+        let speed = 200;
+        let gameRunning = false;
+        let inQuestionMode = false;
+        let nextDirection = null;
+        let currentQuestion = null;
+        let timer = 10;
+        let timerInterval;
+
+        const colors = ['blue', 'red', 'green', 'yellow', 'purple'];
+        const labels = ['A', 'B', 'C', 'D', 'E'];
+
+        // ✅ PERGUNTAS DE GEOGRAFIA DO 7º ANO (BNCC)
+        const allQuestions = [
+            { q: "Qual continente é conhecido como o 'berço da humanidade'?", o: ["América", "Ásia", "África", "Europa", "Oceania"], c: 2 },
+            { q: "Qual país tem a maior população do mundo?", o: ["Índia", "Estados Unidos", "Indonésia", "China", "Paquistão"], c: 3 },
+            { q: "Qual é a principal religião no Oriente Médio?", o: ["Cristianismo", "Hinduísmo", "Islamismo", "Budismo", "Judaísmo"], c: 2 },
+            { q: "Qual é o maior deserto quente do mundo?", o: ["Atacama", "Saara", "Kaláhari", "Gobi", "Namíbia"], c: 1 },
+            { q: "Qual país africano foi colonizado por Portugal e fala português?", o: ["Moçambique", "Quênia", "Egito", "África do Sul", "Nigéria"], c: 0 },
+            { q: "Qual é a principal riqueza do Oriente Médio?", o: ["Petróleo", "Ouro", "Diamantes", "Minério de ferro", "Cobre"], c: 0 },
+            { q: "Qual continente possui o maior número de países?", o: ["Ásia", "América", "Europa", "África", "Oceania"], c: 3 },
+            { q: "Qual é a língua mais falada no mundo?", o: ["Espanhol", "Inglês", "Mandarim", "Hindi", "Árabe"], c: 2 },
+            { q: "Qual país é conhecido por sua neutralidade em guerras?", o: ["Alemanha", "Suíça", "França", "Itália", "Rússia"], c: 1 },
+            { q: "Qual é o principal problema ambiental no Saara?", o: ["Desertificação", "Chuva ácida", "Poluição do ar", "Desmatamento", "Erosão costeira"], c: 0 },
+            { q: "Qual é o país mais populoso da África?", o: ["Egito", "África do Sul", "Nigéria", "Quênia", "Marrocos"], c: 2 },
+            { q: "Qual é a capital da França?", o: ["Londres", "Berlim", "Roma", "Paris", "Madri"], c: 3 },
+            { q: "Qual país asiático é conhecido como 'país do sol nascente'?", o: ["China", "Índia", "Coreia do Sul", "Japão", "Tailândia"], c: 3 },
+            { q: "Qual é o maior país do mundo em extensão territorial?", o: ["China", "Estados Unidos", "Canadá", "Rússia", "Brasil"], c: 3 },
+            { q: "Qual é o principal recurso natural da Noruega?", o: ["Petróleo", "Carvão", "Gás natural", "Alumínio", "Cobre"], c: 0 },
+            { q: "Qual continente tem o maior número de línguas distintas?", o: ["América", "Ásia", "África", "Europa", "Oceania"], c: 4 },
+            { q: "Qual é o principal motivo dos conflitos no Oriente Médio?", o: ["Diferenças climáticas", "Recursos hídricos", "Disputas religiosas e petróleo", "Fronteiras naturais", "Imigração"], c: 2 },
+            { q: "Qual país europeu foi dividido durante a Guerra Fria?", o: ["França", "Itália", "Alemanha", "Espanha", "Polônia"], c: 2 },
+            { q: "Qual é o oceano mais profundo do mundo?", o: ["Atlântico", "Índico", "Ártico", "Pacífico", "Antártico"], c: 3 },
+            { q: "Qual é a principal atividade econômica em muitos países africanos?", o: ["Indústria pesada", "Tecnologia", "Agricultura de subsistência", "Serviços financeiros", "Mineração espacial"], c: 2 },
+            { q: "Qual país tem a maior parte de seu território no Hemisfério Norte?", o: ["Brasil", "Austrália", "Canadá", "África do Sul", "Argentina"], c: 2 },
+            { q: "Qual é o principal idioma falado na Alemanha?", o: ["Francês", "Inglês", "Espanhol", "Alemão", "Italiano"], c: 3 },
+            { q: "Qual é o país com a maior produção de diamantes?", o: ["Rússia", "África do Sul", "Botswana", "Canadá", "Austrália"], c: 2 },
+            { q: "Qual continente tem o maior número de ilhas?", o: ["América", "Ásia", "África", "Europa", "Oceania"], c: 4 },
+            { q: "Qual é o principal problema ambiental na Indonésia?", o: ["Poluição do ar", "Desmatamento", "Erosão costeira", "Seca", "Desertificação"], c: 1 },
+            { q: "Qual país é o maior produtor de ouro do mundo?", o: ["Estados Unidos", "China", "Rússia", "Austrália", "África do Sul"], c: 1 },
+            { q: "Qual é a principal característica do clima mediterrâneo?", o: ["Chuvas no inverno e seca no verão", "Chuvas todo o ano", "Seca todo o ano", "Inverno rigoroso", "Verão frio"], c: 0 },
+            { q: "Qual é o principal rio que corta o Egito?", o: ["Amazonas", "Mississipi", "Nilo", "Yangtzé", "Danúbio"], c: 2 },
+            { q: "Qual país foi sede da Copa do Mundo de 2022?", o: ["Catar", "Arábia Saudita", "Emirados Árabes", "Irã", "Iraque"], c: 0 },
+            { q: "Qual é o principal bioma da Rússia?", o: ["Tundra e Taiga", "Deserto", "Savana", "Floresta tropical", "Cerrado"], c: 0 }
+        ];
+
+        let availableQuestions = [];
+
+        function resetQuestionPool() {
+            availableQuestions = [...allQuestions];
+        }
+
+        function getRandomQuestion() {
+            if (availableQuestions.length === 0) {
+                resetQuestionPool();
+            }
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            return availableQuestions.splice(randomIndex, 1)[0];
+        }
+
+        function randomGridPosition() {
+            return Math.floor(Math.random() * tileCount);
+        }
+
+        function isPositionOnSnake(x, y) {
+            for (let seg of snake) {
+                if (seg.x === x && seg.y === y) return true;
+            }
+            return false;
+        }
+
+        function placeFoods() {
+            foods = [];
+            for (let i = 0; i < 5; i++) {
+                let x, y;
+                do {
+                    x = Math.random() * (canvas.width - gridSize);
+                    y = Math.random() * (canvas.height - gridSize);
+                } while (isPositionOnSnake(Math.floor(x / gridSize), Math.floor(y / gridSize)));
+
+                foods.push({
+                    x: x,
+                    y: y,
+                    colorIndex: i,
+                    dx: (Math.random() - 0.5) * 14,
+                    dy: (Math.random() - 0.5) * 14
+                });
+            }
+        }
+
+        function drawSnake() {
+            for (let i = 0; i < snake.length; i++) {
+                const seg = snake[i];
+                const x = seg.x * gridSize;
+                const y = seg.y * gridSize;
+
+                if (i === 0) {
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(x, y, gridSize, gridSize);
+
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(x + 6, y + 8, 4, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(x + gridSize - 6, y + 8, 4, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x + 10, y + 8);
+                    ctx.lineTo(x + gridSize - 10, y + 8);
+                    ctx.stroke();
+
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x + 8, y + 14);
+                    ctx.lineTo(x + gridSize - 8, y + 14);
+                    ctx.stroke();
+                } else {
+                    ctx.fillStyle = '#27ae60';
+                    ctx.fillRect(x, y, gridSize, gridSize);
+                    ctx.strokeStyle = '#1e8449';
+                    ctx.strokeRect(x, y, gridSize, gridSize);
+                }
+            }
+        }
+
+        function drawFoods() {
+            for (let food of foods) {
+                ctx.fillStyle = colors[food.colorIndex];
+                ctx.beginPath();
+                ctx.arc(food.x + gridSize/2, food.y + gridSize/2, gridSize/2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(labels[food.colorIndex], food.x + gridSize/2, food.y + gridSize/2);
+            }
+        }
+
+        function updateFoods() {
+            for (let food of foods) {
+                food.x += food.dx;
+                food.y += food.dy;
+
+                if (food.x <= 0 || food.x >= canvas.width - gridSize) food.dx *= -1;
+                if (food.y <= 0 || food.y >= canvas.height - gridSize) food.dy *= -1;
+
+                food.x = Math.max(0, Math.min(canvas.width - gridSize, food.x));
+                food.y = Math.max(0, Math.min(canvas.height - gridSize, food.y));
+            }
+        }
+
+        function moveSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+
+            let ateFood = false;
+            let chosenIndex = -1;
+
+            for (let i = 0; i < foods.length; i++) {
+                const food = foods[i];
+                const fcx = food.x + gridSize/2;
+                const fcy = food.y + gridSize/2;
+                const hcx = head.x * gridSize + gridSize/2;
+                const hcy = head.y * gridSize + gridSize/2;
+                const dist = Math.sqrt((hcx - fcx)**2 + (hcy - fcy)**2);
+                if (dist < 15) {
+                    chosenIndex = food.colorIndex;
+                    foods.splice(i, 1);
+                    ateFood = true;
+                    break;
+                }
+            }
+
+            if (!ateFood) {
+                snake.pop();
+            } else {
+                handleAnswer(chosenIndex);
+            }
+        }
+
+        function showFeedback(text, color) {
+            feedbackEl.textContent = text;
+            feedbackEl.style.color = color;
+            feedbackEl.style.opacity = '1';
+            setTimeout(() => {
+                feedbackEl.style.opacity = '0';
+            }, 1200);
+        }
+
+        function handleAnswer(colorIndex) {
+            if (colorIndex === currentQuestion.c) {
+                score += 10;
+                scoreDisplay.textContent = `Pontuação: ${score}`;
+                const tail = snake[snake.length - 1];
+                snake.push({...tail});
+                showFeedback('✅ Acertou!', '#2ecc71');
+            } else {
+                if (snake.length === 1) {
+                    showFeedback('❌ Errou!', '#e74c3c');
+                    setTimeout(gameOver, 1200);
+                    return;
+                } else if (snake.length === 2) {
+                    snake.pop();
+                    showFeedback('❌ -1 Bloco!', '#e74c3c');
+                } else {
+                    snake.pop();
+                    snake.pop();
+                    showFeedback('❌ -2 Blocos!', '#e74c3c');
+                }
+            }
+
+            if (snake.length === 0) {
+                setTimeout(gameOver, 500);
+                return;
+            }
+
+            setTimeout(showQuestion, 1300);
+        }
+
+        function showQuestion() {
+            inQuestionMode = true;
+            gameRunning = false;
+
+            clearInterval(timerInterval);
+            currentQuestion = getRandomQuestion();
+            questionText.innerHTML = `<strong>${currentQuestion.q}</strong><br><br>` +
+                currentQuestion.o.map((opt, i) => `${labels[i]}. ${opt}`).join('<br>');
+
+            questionScreen.style.display = 'flex';
+            timer = 10;
+            timerDisplay.textContent = `${timer}s`;
+
+            timerInterval = setInterval(() => {
+                timer--;
+                timerDisplay.textContent = `${timer}s`;
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    startGameplay();
+                }
+            }, 1000);
+        }
+
+        function startGameplay() {
+            inQuestionMode = false;
+            gameRunning = true;
+            questionScreen.style.display = 'none';
+            placeFoods();
+            gameLoop();
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) return true;
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) return true;
+            }
+            return false;
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            clearInterval(timerInterval);
+            finalScoreEl.textContent = `Pontuação: ${score}`;
+            gameOverScreen.style.display = 'flex';
+        }
+
+        function startNewGame() {
+            snake = [{x: Math.floor(tileCount/2), y: Math.floor(tileCount/2)}];
+            dx = 0; dy = 0;
+            score = 0;
+            scoreDisplay.textContent = `Pontuação: ${score}`;
+            gameOverScreen.style.display = 'none';
+            resetQuestionPool();
+            showQuestion();
+        }
+
+        // ✅ MECÂNICA ORIGINAL: Não permite inversão de direção
+        function setDirection(ndx, ndy) {
+            if ((dx === 1 && ndx === -1) || (dx === -1 && ndx === 1) ||
+                (dy === 1 && ndy === -1) || (dy === -1 && ndy === 1)) {
+                return;
+            }
+            nextDirection = { dx: ndx, dy: ndy };
+        }
+
+        // Controles Mobile
+        document.getElementById('up-btn').addEventListener('click', () => setDirection(0, -1));
+        document.getElementById('down-btn').addEventListener('click', () => setDirection(0, 1));
+        document.getElementById('left-btn').addEventListener('click', () => setDirection(-1, 0));
+        document.getElementById('right-btn').addEventListener('click', () => setDirection(1, 0));
+
+        // Teclado
+        document.addEventListener('keydown', e => {
+            if (inQuestionMode || !gameRunning) return;
+            switch(e.key) {
+                case 'ArrowUp': setDirection(0, -1); break;
+                case 'ArrowDown': setDirection(0, 1); break;
+                case 'ArrowLeft': setDirection(-1, 0); break;
+                case 'ArrowRight': setDirection(1, 0); break;
+            }
+        });
+
+        function gameLoop() {
+            if (!gameRunning || inQuestionMode) return;
+
+            setTimeout(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (nextDirection) {
+                    dx = nextDirection.dx;
+                    dy = nextDirection.dy;
+                    nextDirection = null;
+                }
+
+                moveSnake();
+
+                if (checkCollision()) {
+                    gameOver();
+                    return;
+                }
+
+                updateFoods();
+                drawFoods();
+                drawSnake();
+
+                gameLoop();
+            }, speed);
+        }
+
+        document.querySelectorAll('.option').forEach(el => {
+            el.addEventListener('click', () => {
+                clearInterval(timerInterval);
+                startGameplay();
+            });
+        });
+
+        restartBtn.addEventListener('click', startNewGame);
+
+        window.onload = () => {
+            startNewGame();
+        };
+    </script>
+</body>
+</html>
